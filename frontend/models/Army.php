@@ -105,6 +105,7 @@ class Army extends \yii\db\ActiveRecord
             $stats['offense_ranged'] = floor($sumUnitLevelRanged / $unitCountRanged) + pow(2, floor(log($unitCountRanged, 2)) - 6);
         else
             $stats['offense_ranged'] = 0;
+        $stats['consumption'] = $stats['level'] * 2; //Consumption per month.
         return $stats;
     }
     

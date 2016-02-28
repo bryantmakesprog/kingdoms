@@ -27,6 +27,12 @@ $this->params['breadcrumbs'][] = $this->title;
             'description:ntext',
             'level',
             'hitDice',
+            [
+                'label' => 'Cost',
+                'value' => function ($data) {
+                    return $data->getCost(); // $data['name'] for array data, e.g. using SqlDataProvider.
+                    },
+            ],
             // 'isRanged',
 
             ['class' => 'yii\grid\ActionColumn'],

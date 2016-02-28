@@ -57,4 +57,10 @@ class Unit extends \yii\db\ActiveRecord
     {
         return [0 => 'Melee', 1 => 'Ranged'];
     }
+    
+    //Get cost in BP
+    public function getCost()
+    {
+        return $this->level + pow(2,log(1, 2) - (6 - $this->level / 2));
+    }
 }
