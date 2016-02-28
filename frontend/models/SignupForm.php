@@ -5,6 +5,9 @@ use common\models\User;
 use yii\base\Model;
 use Yii;
 
+use app\models\Kingdom;
+use app\models\Army;
+
 /**
  * Signup form
  */
@@ -52,7 +55,24 @@ class SignupForm extends Model
         $user->email = $this->email;
         $user->setPassword($this->password);
         $user->generateAuthKey();
+        $user->role = 10;
         
-        return $user->save() ? $user : null;
+        if($user->save())
+        {
+            //Create a kingdom and army for this user.
+            $kingdom = new Kingdom();
+            $kingdom->user = $user->id;
+            $date = new \DateTime();
+            $kingdom->created_at = $date->getTimestamp();
+            $kingdom->updated_at = $kingdom->created_at;
+            $kingdom->save();
+            $army = new Army();
+            $army->user = $user->id;
+            $army->kingdom = $kingdom->id;
+            $army->save();
+            return $user;
+        }
+        else
+            return null;
     }
 }

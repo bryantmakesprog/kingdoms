@@ -8,6 +8,7 @@ use yii\db\Expression;
 use common\models\User;
 use app\models\UnitConnections;
 use app\models\Unit;
+use app\models\Kingdom;
 
 /**
  * This is the model class for table "army".
@@ -174,6 +175,13 @@ class Army extends \yii\db\ActiveRecord
             if($healthLoss <= 0)
                 break;
         }
+        $this->updateKingdom(count($lossRecord));
         return $lossRecord;
+    }
+    
+    public function updateKingdom($losses)
+    {
+        $kingdom = Kingdom::findOne($this->kingdom);
+        $kingdom->performBattleLoss($losses);
     }
 }

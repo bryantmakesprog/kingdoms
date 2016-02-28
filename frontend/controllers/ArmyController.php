@@ -76,18 +76,25 @@ class ArmyController extends Controller
         ]);
     }
     
+    //Overall army view.
     public function actionStatus()
     {
         $army = Army::find()->where(['user' => Yii::$app->user->identity->id])->one();
-        if(!$army)
-        {
-            $army = new Army();
-            $army->user = Yii::$app->user->identity->id;
-            $army->kingdom = "-1";
-            $army->save();
-//TODO - Set the kingdom appropriately. Req's the setup of kingdoms first.-----------------------------------------------------------------------------
-        }
         return $this->render('status', ['model' => $army,]);
+    }
+    
+    //All army units.
+    public function actionRoster()
+    {
+        $army = Army::find()->where(['user' => Yii::$app->user->identity->id])->one();
+        return $this->render('roster', ['model' => $army,]);
+    }
+    
+    //All recruitable units.
+    public function actionRecruit()
+    {
+        $army = Army::find()->where(['user' => Yii::$app->user->identity->id])->one();
+        return $this->render('recruit', ['model' => $army,]);
     }
 
     /**

@@ -4,17 +4,23 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 
 use app\models\Army;
+use app\models\Kingdom;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Army */
 
 $this->title = "Army";
-$this->params['breadcrumbs'][] = ['label' => 'Armies', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Kingdom', 'url' => ['/kingdom/status']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="army-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
+    
+    <p>
+        <?= Html::a('Roster', ['/army/roster',], ['class' => 'btn btn-primary']) ?>
+        <?= Html::a('Recruit', ['/army/recruit',], ['class' => 'btn btn-primary']) ?>
+    </p>
 
     <?php
         $stats = Army::getStatsById($model->id);
@@ -40,6 +46,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     [
                         'label' => 'Defense',
                         'value' => $stats['defense'],
+                    ],
+                    [
+                        'label' => 'Cost-to-Maintain',
+                        'value' => round($stats['consumption'] * Kingdom::POINTS_TO_GOLD_SCALAR, 0),
                     ],
                 ],
             ]);
