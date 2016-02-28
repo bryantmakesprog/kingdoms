@@ -20,7 +20,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'hitDice')->textInput() ?>
 
-    <?= $form->field($model, 'isRanged')->textInput() ?>
+    <?= $form->field($model, 'isRanged')->dropDownList($model->getAttackOptions()) ?>
 
     <div class="form-group">
         <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>

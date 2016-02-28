@@ -52,4 +52,9 @@ class Unit extends \yii\db\ActiveRecord
             'isRanged' => 'Is Ranged',
         ];
     }
+    
+    public function getAttackOptions()
+    {
+        return [0 => 'Melee', 1 => 'Ranged'];
+    }
 }

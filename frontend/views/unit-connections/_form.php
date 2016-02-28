@@ -12,9 +12,9 @@ use yii\widgets\ActiveForm;
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'army')->textInput() ?>
+    <?= $form->field($model, 'army')->dropDownList($model->getArmyOptions()) ?>
 
-    <?= $form->field($model, 'unit')->textInput() ?>
+    <?= $form->field($model, 'unit')->dropDownList($model->getUnitOptions()) ?>
 
     <?= $form->field($model, 'count')->textInput() ?>
 

@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\grid\GridView;
+use common\models\User;
 
 /* @var $this yii\web\View */
 /* @var $dataProvider yii\data\ActiveDataProvider */
@@ -24,6 +25,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
             'id',
             'user',
+            [
+                'label' => 'Username',
+                'value' => function ($data) {
+                    return User::findOne($data->user)->username; // $data['name'] for array data, e.g. using SqlDataProvider.
+                    },
+            ],
             'kingdom',
 
             ['class' => 'yii\grid\ActionColumn'],

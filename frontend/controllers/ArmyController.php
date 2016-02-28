@@ -23,14 +23,20 @@ class ArmyController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index', 'view', 'create', 'update', 'delete'],
+                'only' => ['index', 'view', 'create', 'update', 'delete', 'attack'],
                 'rules' => [
                     [
                         'actions' => ['index', 'view', 'create', 'update', 'delete'],
                         'allow' => true,
+                        'roles' => ['@'],
                         'matchCallback' => function ($rule, $action) {
                             return User::userIsBryant();
                         }
+                    ],
+                    [
+                        'actions' => ['attack'],
+                        'allow' => true,
+                        'roles' => ['@'],
                     ],
                 ],
             ],
@@ -133,6 +139,48 @@ class ArmyController extends Controller
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');
+        }
+    }
+    
+    //Attack a kingdom with the current user's army.
+    public function actionAttack($target)
+    {
+        $userArmy = Army::find()->where(['user' => Yii::$app->user->identity->id])->one();
+        $targetArmy = Army::find()->where(['user' => $target])->one();
+        if($userArmy && $targetArmy)
+        {
+            $userLossesRanged = array();
+            $targetLossesRanged = array();
+            if($userArmy->getStats()['health'] && $targetArmy->getStats()['health'])
+            {
+                //Ranged Attack first.
+                $userDamage = $userArmy->calculateDamageFromAttack($targetArmy, true);
+                $targetDamage = $targetArmy->calculateDamageFromAttack($userArmy, true);
+                //Track who was lost.
+                $userLossesRanged = $userArmy->resolveDamage($userDamage);
+                $targetLossesRanged = $targetArmy->resolveDamage($targetDamage);
+            }
+            $userLossesMelee = array();
+            $targetLossesMelee = array();
+            if($userArmy-getStats()['health'] && $targetArmy->getStats()['health'])
+            {
+                //Melee Attack second.
+                $userDamage = $userArmy->calculateDamageFromAttack($targetArmy);
+                $targetDamage = $targetArmy->calculateDamageFromAttack($userArmy);
+                //Track who was lost.
+                $userLossesMelee = $userArmy->resolveDamage($userDamage);
+                $targetLossesMelee = $targetArmy->resolveDamage($targetDamage);
+                //Send notification to target.
+            }
+            
+            //Combine our arrays and display results.
+            echo $userDamage . " - " . print_r($userLossesMelee);
+            echo "<br/>";
+            echo $targetDamage . " - " . print_r($targetLossesMelee);
+        }
+        else 
+        {
+            throw new \yii\base\Exception("Either user or target army does not exist. Error to be removed.");
         }
     }
 }

@@ -3,6 +3,8 @@
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 
+use app\models\Army;
+
 /* @var $this yii\web\View */
 /* @var $model app\models\Army */
 
@@ -25,13 +27,36 @@ $this->params['breadcrumbs'][] = $this->title;
         ]) ?>
     </p>
 
-    <?= DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            'id',
-            'user',
-            'kingdom',
-        ],
-    ]) ?>
+    <?php
+        $stats = Army::getStatsById($model->id);
+        echo DetailView::widget([
+                'model' => $model,
+                'attributes' => [
+                    'id',
+                    'user',
+                    'kingdom',
+                    [
+                        'label' => 'Size',
+                        'value' => $stats['count'],
+                    ],
+                    [
+                        'label' => 'Level',
+                        'value' => $stats['level'],
+                    ],
+                    [
+                        'label' => 'Offense',
+                        'value' => $stats['offense'],
+                    ],
+                    [
+                        'label' => 'Offense (Ranged)',
+                        'value' => $stats['offense_ranged'],
+                    ],
+                    [
+                        'label' => 'Defense',
+                        'value' => $stats['defense'],
+                    ],
+                ],
+            ]);
+    ?>
 
 </div>
