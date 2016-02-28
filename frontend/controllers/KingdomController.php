@@ -23,7 +23,7 @@ class KingdomController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index', 'view', 'create', 'update', 'delete', 'attack', 'status'],
+                'only' => ['index', 'view', 'create', 'update', 'delete', 'status'],
                 'rules' => [
                     [
                         'actions' => ['index', 'view', 'create', 'update', 'delete'],
@@ -34,7 +34,7 @@ class KingdomController extends Controller
                         }
                     ],
                     [
-                        'actions' => ['attack', 'status'],
+                        'actions' => ['status'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],

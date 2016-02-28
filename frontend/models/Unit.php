@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use app\models\Kingdom;
 
 /**
  * This is the model class for table "unit".
@@ -62,5 +63,11 @@ class Unit extends \yii\db\ActiveRecord
     public function getCost()
     {
         return $this->level + pow(2,log(1, 2) - (6 - $this->level / 2));
+    }
+    
+    //Get cost in gold.
+    public function getCostInGold()
+    {
+        return round($this->getCost() * Kingdom::POINTS_TO_GOLD_SCALAR, 0);
     }
 }

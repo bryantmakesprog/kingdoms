@@ -13,6 +13,9 @@ use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use common\models\User;
 
+use app\models\UnitConnections;
+use app\models\Unit;
+
 /**
  * ArmyController implements the CRUD actions for Army model.
  */
@@ -23,7 +26,7 @@ class ArmyController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index', 'view', 'create', 'update', 'delete', 'attack', 'status'],
+                'only' => ['index', 'view', 'create', 'update', 'delete', 'attack', 'status', 'roster', 'recruit'],
                 'rules' => [
                     [
                         'actions' => ['index', 'view', 'create', 'update', 'delete'],
@@ -34,7 +37,7 @@ class ArmyController extends Controller
                         }
                     ],
                     [
-                        'actions' => ['attack', 'status'],
+                        'actions' => ['attack', 'status', 'roster', 'recruit'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -86,15 +89,67 @@ class ArmyController extends Controller
     //All army units.
     public function actionRoster()
     {
+        $unitConnection = new UnitConnections();
+        if ($unitConnection->load(Yii::$app->request->post()))
+        {
+//TODO - Subtract money------------------------------------------------------------------------------------------------------------------------------------
+            $message = "";
+            $messageType = "";
+            $existingConnection = UnitConnections::find()->where(['unit' => $unitConnection->unit, 'army' => $unitConnection->army])->one();
+            if($existingConnection && ($existingConnection->count >= $unitConnection->count))
+            {
+                $existingConnection->count -= $unitConnection->count;
+                $existingConnection->save();
+                $message = "You successfully removed " . $unitConnection->count . " " . Unit::findOne($unitConnection->unit)->name . "!";
+                $messageType = "success";
+                if($existingConnection->count == 0)
+                {
+                    $existingConnection->delete();
+                }
+            }
+            else
+            {    
+                $message = "You don't own " . $unitConnection->count . " " . Unit::findOne($unitConnection->unit)->name . "!";
+                $messageType = "failure";
+            }
+            return $this->render('roster', ['message' => $message, 'messageType' => $messageType]);
+        }
         $army = Army::find()->where(['user' => Yii::$app->user->identity->id])->one();
-        return $this->render('roster', ['model' => $army,]);
+        return $this->render('roster', ['model' => $army, 'message' => "", 'messageType' => ""]);
     }
     
     //All recruitable units.
     public function actionRecruit()
     {
+        $unitConnection = new UnitConnections();
+        if ($unitConnection->load(Yii::$app->request->post()))
+        {
+//TODO - Subtract money------------------------------------------------------------------------------------------------------------------------------------
+            $message = "";
+            $messageType = "";
+            $sufficientFunds = true;
+            if($sufficientFunds)
+            {
+                $existingConnection = UnitConnections::find()->where(['unit' => $unitConnection->unit, 'army' => $unitConnection->army])->one();
+                if($existingConnection)
+                {
+                    $existingConnection->count += $unitConnection->count;
+                    $existingConnection->save();
+                }
+                else
+                    $unitConnection->save();
+                $message = "You successfully purchased " . $unitConnection->count . " " . Unit::findOne($unitConnection->unit)->name . "!";
+                $messageType = "success";
+            }
+            else
+            {
+                $message = "Insufficient funds!";
+                $messageType = "failure";
+            }
+            return $this->render('recruit', ['message' => $message, 'messageType' => $messageType]);
+        }
         $army = Army::find()->where(['user' => Yii::$app->user->identity->id])->one();
-        return $this->render('recruit', ['model' => $army,]);
+        return $this->render('recruit', ['model' => $army, 'message' => "", 'messageType' => ""]);
     }
 
     /**
