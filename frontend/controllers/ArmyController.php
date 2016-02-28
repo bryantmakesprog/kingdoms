@@ -23,7 +23,7 @@ class ArmyController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index', 'view', 'create', 'update', 'delete', 'attack'],
+                'only' => ['index', 'view', 'create', 'update', 'delete', 'attack', 'status'],
                 'rules' => [
                     [
                         'actions' => ['index', 'view', 'create', 'update', 'delete'],
@@ -34,7 +34,7 @@ class ArmyController extends Controller
                         }
                     ],
                     [
-                        'actions' => ['attack'],
+                        'actions' => ['attack', 'status'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -74,6 +74,20 @@ class ArmyController extends Controller
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
+    }
+    
+    public function actionStatus()
+    {
+        $army = Army::find()->where(['user' => Yii::$app->user->identity->id])->one();
+        if(!$army)
+        {
+            $army = new Army();
+            $army->user = Yii::$app->user->identity->id;
+            $army->kingdom = "-1";
+            $army->save();
+//TODO - Set the kingdom appropriately. Req's the setup of kingdoms first.-----------------------------------------------------------------------------
+        }
+        return $this->render('status', ['model' => $army,]);
     }
 
     /**
@@ -151,7 +165,11 @@ class ArmyController extends Controller
         {
             $userLossesRanged = array();
             $targetLossesRanged = array();
-            if($userArmy->getStats()['health'] && $targetArmy->getStats()['health'])
+            $userHealth = $userArmy->getStats()['health'];
+            $targetHealth = $targetArmy->getStats()['health'];
+            $unableToAttack = false;
+            $raid = false;
+            if($userHealth && $targetHealth)
             {
                 //Ranged Attack first.
                 $userDamage = $userArmy->calculateDamageFromAttack($targetArmy, true);
@@ -160,9 +178,20 @@ class ArmyController extends Controller
                 $userLossesRanged = $userArmy->resolveDamage($userDamage);
                 $targetLossesRanged = $targetArmy->resolveDamage($targetDamage);
             }
+            else
+            {
+                if(!$userHealth)
+                    $unableToAttack = true;
+                if(!$targetHealth && $userHealth) //If the user has health left, this becomes a raid.
+                    $raid = true;
+            }
+            $userHealth = $userArmy->getStats()['health'];
+            $targetHealth = $targetArmy->getStats()['health'];
+            $userWipe = false;
+            $targetWipe = false;
             $userLossesMelee = array();
             $targetLossesMelee = array();
-            if($userArmy-getStats()['health'] && $targetArmy->getStats()['health'])
+            if($userHealth && $targetHealth)
             {
                 //Melee Attack second.
                 $userDamage = $userArmy->calculateDamageFromAttack($targetArmy);
@@ -172,15 +201,55 @@ class ArmyController extends Controller
                 $targetLossesMelee = $targetArmy->resolveDamage($targetDamage);
                 //Send notification to target.
             }
-            
-            //Combine our arrays and display results.
-            echo $userDamage . " - " . print_r($userLossesMelee);
-            echo "<br/>";
-            echo $targetDamage . " - " . print_r($targetLossesMelee);
+            $userHealth = $userArmy->getStats()['health'];
+            $targetHealth = $targetArmy->getStats()['health'];
+            if(!($userHealth && $targetHealth))
+            {
+                if(!$userHealth && !$unableToAttack)
+                    $userWipe = true;
+                if(!$targetHealth && !$raid)
+                {
+                    $targetWipe = true;
+                    if($userHealth) //If the user still has health, this becomes a raid.
+                        $raid = true;
+                }
+            }
+            //Combine our loss arrays.
+            $userLosses = $this->sumLossArrays($userLossesRanged, $userLossesMelee);
+            $targetLosses = $this->sumLossArrays($targetLossesRanged, $targetLossesMelee);
+            //Display results.
+            if(!$unableToAttack)
+            {
+                return $this->render('battle', [
+                    'userLosses' => $userLosses, 
+                    'targetLosses' => $targetLosses, 
+                    'target' => $target,
+                    'userWipe' => $userWipe,
+                    'targetWipe' => $targetWipe,
+                    'raid' => $raid,
+                    ]);
+            }
         }
         else 
         {
             throw new \yii\base\Exception("Either user or target army does not exist. Error to be removed.");
         }
+    }
+    
+    private function sumLossArrays($lossesRanged, $lossesMelee)
+    {
+        $totalLosses = $lossesMelee;
+        foreach($lossesRanged as $key => $value)
+        {
+            if(array_key_exists($key, $totalLosses))
+            {
+                $totalLosses[$key] += $value;
+            }
+            else
+            {
+                $totalLosses[$key] = $value;
+            }
+        }
+        return $totalLosses;
     }
 }

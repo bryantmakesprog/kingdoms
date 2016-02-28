@@ -153,13 +153,12 @@ class Army extends \yii\db\ActiveRecord
                 $i = 0;
                 $unitLossCount = 0;
                 //Destroy as many of these units as we can. Track how many were lost.
-                while(($healthLoss >= $unit->hitDice) && ($unitConnection->count > 0))
-                {
-                    $healthLoss -= $unit->hitDice;
-                    $unitLossCount++;
-                    $unitConnection->count--;
-                    $unitConnection->save();
-                }
+                $unitLossCount = floor($healthLoss / $unit->hitDice);
+                if($unitLossCount > $unitConnection->count)
+                    $unitLossCount = $unitConnection->count;
+                $unitConnection->count -= $unitLossCount;
+                $unitConnection->save();
+                $healthLoss -= $unit->hitDice * $unitLossCount;
                 //Record our losses.
                 if($unitLossCount > 0)
                 {
