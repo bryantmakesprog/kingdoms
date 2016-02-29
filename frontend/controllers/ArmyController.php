@@ -15,6 +15,7 @@ use common\models\User;
 
 use app\models\UnitConnections;
 use app\models\Unit;
+use app\models\Kingdom;
 
 /**
  * ArmyController implements the CRUD actions for Army model.
@@ -124,10 +125,22 @@ class ArmyController extends Controller
         $unitConnection = new UnitConnections();
         if ($unitConnection->load(Yii::$app->request->post()))
         {
-//TODO - Subtract money------------------------------------------------------------------------------------------------------------------------------------
             $message = "";
             $messageType = "";
-            $sufficientFunds = true;
+            $sufficientFunds = false;
+            $unitCount = $unitConnection->count;
+            $unitCost = Unit::findOne($unitConnection->unit)->getCost();
+            $kingdom = Kingdom::getUserKingdom();
+            //If we're super-user, units are free to purchase.
+            if(User::userIsBryant())
+                $unitCost = 0;
+            if($kingdom->points >= ($unitCost * $unitCount))
+            {
+                //Charge our coffers the appropriate amount for this number of units.
+                $kingdom->points -= $unitCost * $unitCount;
+                $kingdom->save();
+                $sufficientFunds = true;
+            }
             if($sufficientFunds)
             {
                 $existingConnection = UnitConnections::find()->where(['unit' => $unitConnection->unit, 'army' => $unitConnection->army])->one();

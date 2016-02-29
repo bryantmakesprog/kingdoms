@@ -18,7 +18,7 @@ use app\models\Army;
  */
 class Kingdom extends \yii\db\ActiveRecord
 {
-    const TIME_BETWEEN_UPDATES = 360; //1 Day
+    const TIME_BETWEEN_UPDATES = 7200; //1 Day
     const POINTS_TO_GOLD_SCALAR = 1000;
     
     /**
@@ -154,5 +154,12 @@ class Kingdom extends \yii\db\ActiveRecord
         $this->economy -= max($lossLevel+1, 0);
         $this->stability -= max($lossLevel, 0);
         $this->save();
+    }
+    
+    //Get user's kingdom.
+    public function getUserKingdom()
+    {
+        $userId = Yii::$app->user->identity->id;
+        return Kingdom::find()->where(['user' => $userId])->one();
     }
 }
